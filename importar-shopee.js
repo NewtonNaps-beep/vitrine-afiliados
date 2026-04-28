@@ -26,7 +26,9 @@ try {
             Link: link,
             Icone: 'shopping-bag',
             CorIcone: '#f53d2d', // Laranja da Shopee
-            Badge: 'Top Loja'
+            Badge: 'Top Loja',
+            Imagem: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png',
+            Preco: 'Ver Loja'
         };
     });
 

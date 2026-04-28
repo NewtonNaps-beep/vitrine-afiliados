@@ -5,7 +5,7 @@ const fs = require('fs');
 function criarPlanilha(nomeArquivo, dados) {
     const wb = XLSX.utils.book_new();
     
-    const headers = ['Titulo', 'Descricao', 'Link', 'Icone', 'CorIcone', 'Badge'];
+    const headers = ['Titulo', 'Descricao', 'Link', 'Icone', 'CorIcone', 'Badge', 'Imagem', 'Preco'];
     const data = [headers, ...dados.map(p => headers.map(h => p[h] ?? ''))];
     
     const ws = XLSX.utils.aoa_to_sheet(data);
@@ -33,7 +33,9 @@ const dadosShopee = [
         Link: "https://shopee.com.br/product/1420372901/58202126334",
         Icone: "sparkles",
         CorIcone: "#ee4d2d",
-        Badge: "🔥 Top 1"
+        Badge: "🔥 Top 1",
+        Imagem: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png",
+        Preco: "R$ 49,90"
     },
     {
         Titulo: "Shampoo Tonalizante Matizze",
@@ -41,7 +43,9 @@ const dadosShopee = [
         Link: "https://shopee.com.br/product/422903557/22994840965",
         Icone: "scissors",
         CorIcone: "#ee4d2d",
-        Badge: ""
+        Badge: "",
+        Imagem: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png",
+        Preco: "R$ 29,90"
     },
     {
         Titulo: "Projetor HY300 Smart",
@@ -49,7 +53,9 @@ const dadosShopee = [
         Link: "https://shopee.com.br/search?keyword=projetor%20hy300",
         Icone: "monitor",
         CorIcone: "#ee4d2d",
-        Badge: "⚡ Oferta"
+        Badge: "⚡ Oferta",
+        Imagem: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png",
+        Preco: "R$ 249,00"
     }
 ];
 
@@ -61,7 +67,9 @@ const dadosML = [
         Link: "https://mercadolivre.com.br",
         Icone: "smartphone",
         CorIcone: "#ffe600",
-        Badge: "Frete Grátis"
+        Badge: "Frete Grátis",
+        Imagem: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/MercadoLivre.svg/256px-MercadoLivre.svg.png",
+        Preco: "Ver Oferta"
     }
 ];
 
@@ -73,7 +81,9 @@ const dadosAmazon = [
         Link: "https://amazon.com.br",
         Icone: "speaker",
         CorIcone: "#ff9900",
-        Badge: "Prime"
+        Badge: "Prime",
+        Imagem: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Amazon_icon.svg/256px-Amazon_icon.svg.png",
+        Preco: "Ver Oferta"
     }
 ];
 
