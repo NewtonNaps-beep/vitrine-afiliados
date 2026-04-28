@@ -128,6 +128,61 @@ p.subtitle {
     justify-content: center;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.1);
+    position: relative; /* Necessário para o popup absoluto */
+}
+
+.hover-popup {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #1e1e24;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    pointer-events: none;
+    min-width: 120px;
+    text-align: center;
+}
+
+.icon-box:hover .hover-popup {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.hover-popup img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hover-popup .popup-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #10b981; /* Verde esmeralda bonito para preço */
+}
+
+/* Setinha do popup apontando para baixo */
+.hover-popup::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: #1e1e24 transparent transparent transparent;
 }
 
 .link-info {

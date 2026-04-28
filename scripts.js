@@ -65,6 +65,8 @@ function renderizarLinks(links, container) {
         const icone = link.Icone || 'shopping-bag';
         const corIcone = link.CorIcone || '#ffffff';
         const badge = link.Badge || '';
+        const imagem = link.Imagem || '';
+        const preco = link.Preco || '';
 
         const a = document.createElement('a');
         a.href = url;
@@ -74,6 +76,12 @@ function renderizarLinks(links, container) {
         a.innerHTML = `
             <div class="icon-box">
                 <i data-lucide="${icone}" style="color: ${corIcone};"></i>
+                ${(imagem || preco) ? `
+                <div class="hover-popup">
+                    ${imagem ? `<img src="${imagem}" alt="Produto" />` : ''}
+                    ${preco ? `<div class="popup-price">${preco}</div>` : ''}
+                </div>
+                ` : ''}
             </div>
             <div class="link-info">
                 <h3>${titulo}</h3>
