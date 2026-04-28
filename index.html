@@ -3,162 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Achadinhos Brabos — Ofertas Imperdíveis</title>
-    <meta name="description" content="As melhores promoções da internet reunidas em um só lugar. Ofertas de Shopee, Amazon e Mercado Livre com descontos absurdos.">
+    <title>Minha Vitrine de Afiliados | Ofertas</title>
+    <meta name="description" content="Encontre as melhores ofertas e produtos dos maiores marketplaces do Brasil: Shopee, Mercado Livre e Amazon.">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS (xlsx) para leitura das planilhas Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-
-    <!-- TICKER DE OFERTAS -->
-    <div class="ticker-bar">
-        <div class="ticker-content">
-            <span><i class="fa-solid fa-bolt"></i> OFERTAS ATUALIZADAS DIARIAMENTE</span>
-            <span><i class="fa-solid fa-truck-fast"></i> FRETE GRÁTIS EM DIVERSOS PRODUTOS</span>
-            <span><i class="fa-solid fa-shield-halved"></i> LINKS 100% SEGUROS E VERIFICADOS</span>
-            <span><i class="fa-solid fa-tag"></i> CUPONS EXCLUSIVOS DISPONÍVEIS</span>
-            <span><i class="fa-solid fa-bolt"></i> OFERTAS ATUALIZADAS DIARIAMENTE</span>
-            <span><i class="fa-solid fa-truck-fast"></i> FRETE GRÁTIS EM DIVERSOS PRODUTOS</span>
-            <span><i class="fa-solid fa-shield-halved"></i> LINKS 100% SEGUROS E VERIFICADOS</span>
-            <span><i class="fa-solid fa-tag"></i> CUPONS EXCLUSIVOS DISPONÍVEIS</span>
-        </div>
-    </div>
-
-    <div class="page-wrapper">
-
-        <!-- HEADER / HERO -->
-        <header class="hero">
-            <div class="hero-bg"></div>
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <i class="fa-solid fa-fire"></i> Página de Promoções
-                </div>
-                <h1>Achadinhos <span class="gradient-text">Brabos</span></h1>
-                <p class="hero-subtitle">Promoções <strong>absurdas</strong> que você não encontra em nenhum outro lugar.<br>Links de afiliado verificados — compre seguro!</p>
-
-                <div class="hero-stats">
-                    <div class="stat">
-                        <span class="stat-number" data-count="16">0</span>
-                        <span class="stat-label">Ofertas Ativas</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat">
-                        <span class="stat-number">3</span>
-                        <span class="stat-label">Marketplaces</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat">
-                        <span class="stat-number">55%</span>
-                        <span class="stat-label">Desconto Máx.</span>
-                    </div>
-                </div>
-
-                <div class="marketplace-logos">
-                    <div class="mp-logo mp-shopee"><i class="fa-solid fa-cart-shopping"></i> Shopee</div>
-                    <div class="mp-logo mp-amazon"><i class="fa-brands fa-amazon"></i> Amazon</div>
-                    <div class="mp-logo mp-ml"><i class="fa-solid fa-handshake"></i> Mercado Livre</div>
-                </div>
+    <div class="container">
+        <header>
+            <div class="banner-container">
+                <img src="banner.png" alt="Banner Vitrine de Afiliados" class="banner-img">
             </div>
+            <div class="profile-container">
+                <img src="perfil.png" alt="Perfil" class="profile-img-real">
+            </div>
+            <h1>Vitrine de Afiliados</h1>
+            <p class="subtitle">As melhores ofertas da internet selecionadas para você.</p>
         </header>
 
-        <!-- BARRA DE BUSCA + FILTROS -->
-        <section class="controls-section">
-            <div class="search-container">
-                <div class="search-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar ofertas, produtos, marcas...">
-                    <span class="search-shortcut">ESC limpa</span>
-                </div>
+        <main class="links-list" id="links-container">
+            <!-- Loading indicator -->
+            <div id="loading" style="text-align: center; width: 100%; padding: 20px;">
+                <i data-lucide="loader" style="animation: spin 2s linear infinite;"></i>
+                <p style="margin-top: 10px;">Carregando ofertas...</p>
+                <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             </div>
-
-            <div class="filter-bar">
-                <button class="filter-btn active" data-filter="todos">
-                    <i class="fa-solid fa-fire-flame-curved"></i> Todos
-                </button>
-                <button class="filter-btn" data-filter="eletronicos">
-                    <i class="fa-solid fa-microchip"></i> Eletrônicos
-                </button>
-                <button class="filter-btn" data-filter="casa">
-                    <i class="fa-solid fa-house"></i> Casa
-                </button>
-                <button class="filter-btn" data-filter="beleza">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Beleza
-                </button>
-                <button class="filter-btn" data-filter="saude">
-                    <i class="fa-solid fa-heart-pulse"></i> Saúde
-                </button>
-            </div>
-
-            <div class="results-info">
-                <span id="resultsCount">16 ofertas encontradas</span>
-                <div class="sort-wrapper">
-                    <select id="sortSelect">
-                        <option value="relevancia">Relevância</option>
-                        <option value="menor-preco">Menor Preço</option>
-                        <option value="maior-desconto">Maior Desconto</option>
-                        <option value="mais-vendidos">Mais Vendidos</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <!-- GRID DE PRODUTOS -->
-        <main id="productList" class="product-grid">
-            <!-- Renderizado via JS -->
         </main>
 
-        <!-- CTA TELEGRAM -->
-        <section class="cta-section">
-            <div class="cta-card">
-                <div class="cta-icon">
-                    <i class="fa-brands fa-telegram"></i>
-                </div>
-                <div class="cta-text">
-                    <h3>Receba ofertas primeiro!</h3>
-                    <p>Entre no nosso canal do Telegram e nunca perca uma promoção. Alertas em tempo real!</p>
-                </div>
-                <a href="#" class="cta-button">
-                    <i class="fa-brands fa-telegram"></i> Entrar no Canal
-                </a>
-            </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer class="site-footer">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <h4>Achadinhos <span class="gradient-text">Brabos</span></h4>
-                    <p>Selecionamos as melhores ofertas da internet para você economizar de verdade. Links de afiliado — ao comprar pelos nossos links, você apoia nosso trabalho sem pagar nada a mais!</p>
-                </div>
-                <div class="footer-links">
-                    <h5>Marketplaces</h5>
-                    <a href="https://shopee.com.br"><i class="fa-solid fa-arrow-up-right-from-square"></i> Shopee</a>
-                    <a href="https://amazon.com.br"><i class="fa-solid fa-arrow-up-right-from-square"></i> Amazon</a>
-                    <a href="https://mercadolivre.com.br"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mercado Livre</a>
-                </div>
-                <div class="footer-social">
-                    <h5>Redes Sociais</h5>
-                    <div class="social-icons">
-                        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-                        <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
-                        <a href="#" aria-label="Telegram"><i class="fa-brands fa-telegram"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Achadinhos Brabos. Todos os direitos reservados.</p>
-                <p class="disclaimer">Este site contém links de afiliado. Ao realizar compras através desses links, podemos receber uma comissão sem custo adicional para você.</p>
-            </div>
+        <footer>
+            <p>&copy; 2026 Vitrine de Afiliados. Todos os direitos reservados.</p>
         </footer>
-
     </div>
 
-    <!-- SheetJS para ler Excel no browser -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-    <script type="module" src="scripts.js"></script>
+    <!-- Inicializa os ícones do Lucide no HTML base -->
+    <script>lucide.createIcons();</script>
+    <!-- Script principal para carregar as planilhas -->
+    <script src="scripts.js"></script>
 </body>
 </html>

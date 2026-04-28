@@ -1,232 +1,93 @@
-// ===== CARREGADOR DE DADOS =====
-// Prioridade: produtos.xlsx > produtos.js (fallback)
+// Configuração dos arquivos de planilhas
+const PLANILHAS = [
+    { url: 'shopee.xlsx', nome: 'Shopee' },
+    { url: 'mercadolivre.xlsx', nome: 'Mercado Livre' },
+    { url: 'amazon.xlsx', nome: 'Amazon' }
+];
 
-const productList = document.getElementById('productList');
-const searchInput = document.getElementById('searchInput');
-const filterButtons = document.querySelectorAll('.filter-btn');
-const sortSelect = document.getElementById('sortSelect');
-const resultsCount = document.getElementById('resultsCount');
+async function carregarPlanilhas() {
+    const container = document.getElementById('links-container');
+    let todosOsLinks = [];
 
-let produtos = [];
-let currentFilter = 'todos';
-let currentSearch = '';
-
-// === CATEGORIAS MAP ===
-const categoriaLabels = {
-    eletronicos: 'Eletrônicos',
-    casa: 'Casa & Decoração',
-    beleza: 'Beleza',
-    saude: 'Saúde & Bem-estar'
-};
-
-// === CARREGAR DADOS DO EXCEL ===
-async function carregarProdutosExcel() {
-    try {
-        const response = await fetch('produtos.xlsx');
-        if (!response.ok) throw new Error('Excel não encontrado');
-        const buffer = await response.arrayBuffer();
-        const wb = XLSX.read(buffer, { type: 'array' });
-        const ws = wb.Sheets['Produtos'] || wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(ws);
-
-        return json.map(row => ({
-            codigo: String(row.codigo || ''),
-            nome: String(row.nome || ''),
-            descricao: String(row.descricao || ''),
-            imagem: String(row.imagem || ''),
-            categoria: String(row.categoria || '').toLowerCase().trim(),
-            precoOriginal: parseFloat(row.precoOriginal) || 0,
-            precoAtual: parseFloat(row.precoAtual) || 0,
-            badge: String(row.badge || ''),
-            avaliacao: parseFloat(row.avaliacao) || 0,
-            vendidos: parseInt(row.vendidos) || 0,
-            linkShopee: String(row.linkShopee || ''),
-            linkAmazon: String(row.linkAmazon || ''),
-            linkMercadoLivre: String(row.linkMercadoLivre || '')
-        })).filter(p => p.nome); // remove linhas vazias
-    } catch (e) {
-        console.warn('⚠️ Não foi possível carregar produtos.xlsx, usando fallback JS:', e.message);
-        return null;
+    for (const planilha of PLANILHAS) {
+        try {
+            const response = await fetch(planilha.url);
+            if (!response.ok) {
+                console.warn(`Planilha não encontrada ou erro ao carregar: ${planilha.url}`);
+                continue;
+            }
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Assume que os dados estão na primeira aba
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Converte para JSON
+            const json = XLSX.utils.sheet_to_json(worksheet);
+            
+            // Adiciona a identificação da plataforma a cada link
+            const linksComPlataforma = json.map(item => ({
+                ...item,
+                plataforma: planilha.nome
+            }));
+            
+            todosOsLinks = [...todosOsLinks, ...linksComPlataforma];
+            
+        } catch (error) {
+            console.error(`Erro ao processar ${planilha.url}:`, error);
+        }
     }
+
+    renderizarLinks(todosOsLinks, container);
 }
 
-// === CARREGAR FALLBACK JS ===
-async function carregarProdutosJS() {
-    try {
-        const module = await import('./produtos.js');
-        return module.default;
-    } catch (e) {
-        console.error('Erro ao carregar produtos.js:', e);
-        return [];
-    }
-}
+function renderizarLinks(links, container) {
+    container.innerHTML = ''; // Limpa o loading
 
-// === FUNÇÕES AUXILIARES ===
-function calcDiscount(original, current) {
-    if (!original || original <= current) return 0;
-    return Math.round(((original - current) / original) * 100);
-}
-
-function formatPrice(value) {
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function formatSold(num) {
-    if (num >= 1000) return (num / 1000).toFixed(1).replace('.0', '') + 'k';
-    return num.toString();
-}
-
-function renderStars(rating) {
-    let stars = '';
-    const full = Math.floor(rating);
-    const half = rating % 1 >= 0.5;
-    for (let i = 0; i < full; i++) stars += '<i class="fa-solid fa-star"></i>';
-    if (half) stars += '<i class="fa-solid fa-star-half-stroke"></i>';
-    return stars;
-}
-
-// === RENDER ===
-function renderProducts(list) {
-    productList.innerHTML = '';
-
-    if (list.length === 0) {
-        productList.innerHTML = `
-            <div class="no-results">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <h3>Nenhuma oferta encontrada</h3>
-                <p>Tente buscar por outro termo ou mude o filtro.</p>
-            </div>`;
-        resultsCount.textContent = '0 ofertas encontradas';
+    if (links.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; opacity: 0.7;">
+                <p>Nenhuma oferta encontrada no momento.</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">Verifique se os arquivos .xlsx estão corretos.</p>
+            </div>
+        `;
         return;
     }
 
-    resultsCount.textContent = `${list.length} oferta${list.length > 1 ? 's' : ''} encontrada${list.length > 1 ? 's' : ''}`;
+    links.forEach(link => {
+        // Valores default caso a planilha não tenha essas colunas
+        const titulo = link.Titulo || 'Produto sem título';
+        const descricao = link.Descricao || '';
+        const url = link.Link || '#';
+        const icone = link.Icone || 'shopping-bag';
+        const corIcone = link.CorIcone || '#ffffff';
+        const badge = link.Badge || '';
 
-    list.forEach(product => {
-        const discount = calcDiscount(product.precoOriginal, product.precoAtual);
-        const card = document.createElement('div');
-        card.className = 'product-card';
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.className = 'link-card';
 
-        let buttonsHTML = '';
-        if (product.linkShopee) {
-            buttonsHTML += `<a href="${product.linkShopee}" target="_blank" rel="noopener" class="btn-marketplace btn-shopee"><i class="fa-solid fa-cart-shopping"></i> Shopee</a>`;
-        }
-        if (product.linkAmazon) {
-            buttonsHTML += `<a href="${product.linkAmazon}" target="_blank" rel="noopener" class="btn-marketplace btn-amazon"><i class="fa-brands fa-amazon"></i> Amazon</a>`;
-        }
-        if (product.linkMercadoLivre) {
-            buttonsHTML += `<a href="${product.linkMercadoLivre}" target="_blank" rel="noopener" class="btn-marketplace btn-ml"><i class="fa-solid fa-handshake"></i> M. Livre</a>`;
-        }
-
-        card.innerHTML = `
-            <div class="card-image-wrap">
-                <img src="${product.imagem}" alt="${product.nome}" loading="lazy">
-                ${discount > 0 ? `<span class="discount-tag">-${discount}%</span>` : ''}
-                ${product.badge ? `<span class="card-badge">${product.badge}</span>` : ''}
+        a.innerHTML = `
+            <div class="icon-box">
+                <i data-lucide="${icone}" style="color: ${corIcone};"></i>
             </div>
-            <div class="card-body">
-                <span class="card-category">${categoriaLabels[product.categoria] || product.categoria}</span>
-                <h2 class="card-title">${product.nome}</h2>
-                <p class="card-description">${product.descricao}</p>
-                <div class="card-social-proof">
-                    <span class="card-rating">${renderStars(product.avaliacao)} ${product.avaliacao}</span>
-                    <span class="card-sold"><i class="fa-solid fa-bag-shopping"></i> ${formatSold(product.vendidos)} vendidos</span>
-                </div>
-                <div class="card-pricing">
-                    <span class="price-current">${formatPrice(product.precoAtual)}</span>
-                    ${product.precoOriginal > product.precoAtual ? `<span class="price-original">${formatPrice(product.precoOriginal)}</span>` : ''}
-                </div>
+            <div class="link-info">
+                <h3>${titulo}</h3>
+                ${descricao ? `<p>${descricao}</p>` : ''}
             </div>
-            <div class="card-buttons">
-                ${buttonsHTML}
-            </div>
+            ${badge ? `<div class="badge">${badge}</div>` : ''}
         `;
 
-        productList.appendChild(card);
+        container.appendChild(a);
     });
+
+    // Re-inicializa os ícones do Lucide para os elementos recém-criados
+    lucide.createIcons();
 }
 
-// === FILTRO + BUSCA + SORT ===
-function getFilteredProducts() {
-    let list = [...produtos];
-
-    if (currentFilter !== 'todos') {
-        list = list.filter(p => p.categoria === currentFilter);
-    }
-
-    if (currentSearch) {
-        const term = currentSearch.toLowerCase();
-        list = list.filter(p =>
-            p.nome.toLowerCase().includes(term) ||
-            p.codigo.includes(term) ||
-            p.descricao.toLowerCase().includes(term) ||
-            (categoriaLabels[p.categoria] || '').toLowerCase().includes(term)
-        );
-    }
-
-    const sort = sortSelect.value;
-    if (sort === 'menor-preco') {
-        list.sort((a, b) => a.precoAtual - b.precoAtual);
-    } else if (sort === 'maior-desconto') {
-        list.sort((a, b) => calcDiscount(b.precoOriginal, b.precoAtual) - calcDiscount(a.precoOriginal, a.precoAtual));
-    } else if (sort === 'mais-vendidos') {
-        list.sort((a, b) => b.vendidos - a.vendidos);
-    }
-
-    return list;
-}
-
-function refresh() {
-    renderProducts(getFilteredProducts());
-}
-
-// === EVENT LISTENERS ===
-searchInput.addEventListener('input', () => {
-    currentSearch = searchInput.value;
-    refresh();
-});
-
-searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        searchInput.value = '';
-        currentSearch = '';
-        refresh();
-    }
-});
-
-filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        refresh();
-    });
-});
-
-sortSelect.addEventListener('change', refresh);
-
-// === INICIALIZAÇÃO ===
-async function init() {
-    // Mostra loading
-    productList.innerHTML = '<p style="text-align:center; color: #8a8a9a; grid-column: 1/-1; padding: 40px;">Carregando ofertas...</p>';
-
-    // Tenta carregar do Excel primeiro
-    const dadosExcel = await carregarProdutosExcel();
-
-    if (dadosExcel && dadosExcel.length > 0) {
-        produtos = dadosExcel;
-        console.log(`✅ ${produtos.length} produtos carregados do Excel`);
-    } else {
-        // Fallback para o arquivo JS
-        produtos = await carregarProdutosJS();
-        console.log(`📦 ${produtos.length} produtos carregados do JS (fallback)`);
-    }
-
-    // Atualiza contador no hero
-    const statEl = document.querySelector('[data-count]');
-    if (statEl) statEl.textContent = produtos.length;
-
-    refresh();
-}
-
-init();
+// Inicia o carregamento assim que a página carregar
+document.addEventListener('DOMContentLoaded', carregarPlanilhas);
