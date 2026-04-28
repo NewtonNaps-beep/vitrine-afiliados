@@ -1,4 +1,5 @@
-import produtos from './produtos.js';
+// ===== CARREGADOR DE DADOS =====
+// Prioridade: produtos.xlsx > produtos.js (fallback)
 
 const productList = document.getElementById('productList');
 const searchInput = document.getElementById('searchInput');
@@ -6,6 +7,7 @@ const filterButtons = document.querySelectorAll('.filter-btn');
 const sortSelect = document.getElementById('sortSelect');
 const resultsCount = document.getElementById('resultsCount');
 
+let produtos = [];
 let currentFilter = 'todos';
 let currentSearch = '';
 
@@ -17,8 +19,51 @@ const categoriaLabels = {
     saude: 'Saúde & Bem-estar'
 };
 
+// === CARREGAR DADOS DO EXCEL ===
+async function carregarProdutosExcel() {
+    try {
+        const response = await fetch('produtos.xlsx');
+        if (!response.ok) throw new Error('Excel não encontrado');
+        const buffer = await response.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: 'array' });
+        const ws = wb.Sheets['Produtos'] || wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(ws);
+
+        return json.map(row => ({
+            codigo: String(row.codigo || ''),
+            nome: String(row.nome || ''),
+            descricao: String(row.descricao || ''),
+            imagem: String(row.imagem || ''),
+            categoria: String(row.categoria || '').toLowerCase().trim(),
+            precoOriginal: parseFloat(row.precoOriginal) || 0,
+            precoAtual: parseFloat(row.precoAtual) || 0,
+            badge: String(row.badge || ''),
+            avaliacao: parseFloat(row.avaliacao) || 0,
+            vendidos: parseInt(row.vendidos) || 0,
+            linkShopee: String(row.linkShopee || ''),
+            linkAmazon: String(row.linkAmazon || ''),
+            linkMercadoLivre: String(row.linkMercadoLivre || '')
+        })).filter(p => p.nome); // remove linhas vazias
+    } catch (e) {
+        console.warn('⚠️ Não foi possível carregar produtos.xlsx, usando fallback JS:', e.message);
+        return null;
+    }
+}
+
+// === CARREGAR FALLBACK JS ===
+async function carregarProdutosJS() {
+    try {
+        const module = await import('./produtos.js');
+        return module.default;
+    } catch (e) {
+        console.error('Erro ao carregar produtos.js:', e);
+        return [];
+    }
+}
+
 // === FUNÇÕES AUXILIARES ===
 function calcDiscount(original, current) {
+    if (!original || original <= current) return 0;
     return Math.round(((original - current) / original) * 100);
 }
 
@@ -105,12 +150,10 @@ function renderProducts(list) {
 function getFilteredProducts() {
     let list = [...produtos];
 
-    // Filtro categoria
     if (currentFilter !== 'todos') {
         list = list.filter(p => p.categoria === currentFilter);
     }
 
-    // Busca
     if (currentSearch) {
         const term = currentSearch.toLowerCase();
         list = list.filter(p =>
@@ -121,16 +164,11 @@ function getFilteredProducts() {
         );
     }
 
-    // Sort
     const sort = sortSelect.value;
     if (sort === 'menor-preco') {
         list.sort((a, b) => a.precoAtual - b.precoAtual);
     } else if (sort === 'maior-desconto') {
-        list.sort((a, b) => {
-            const dA = calcDiscount(a.precoOriginal, a.precoAtual);
-            const dB = calcDiscount(b.precoOriginal, b.precoAtual);
-            return dB - dA;
-        });
+        list.sort((a, b) => calcDiscount(b.precoOriginal, b.precoAtual) - calcDiscount(a.precoOriginal, a.precoAtual));
     } else if (sort === 'mais-vendidos') {
         list.sort((a, b) => b.vendidos - a.vendidos);
     }
@@ -167,5 +205,28 @@ filterButtons.forEach(btn => {
 
 sortSelect.addEventListener('change', refresh);
 
-// === INIT ===
-refresh();
+// === INICIALIZAÇÃO ===
+async function init() {
+    // Mostra loading
+    productList.innerHTML = '<p style="text-align:center; color: #8a8a9a; grid-column: 1/-1; padding: 40px;">Carregando ofertas...</p>';
+
+    // Tenta carregar do Excel primeiro
+    const dadosExcel = await carregarProdutosExcel();
+
+    if (dadosExcel && dadosExcel.length > 0) {
+        produtos = dadosExcel;
+        console.log(`✅ ${produtos.length} produtos carregados do Excel`);
+    } else {
+        // Fallback para o arquivo JS
+        produtos = await carregarProdutosJS();
+        console.log(`📦 ${produtos.length} produtos carregados do JS (fallback)`);
+    }
+
+    // Atualiza contador no hero
+    const statEl = document.querySelector('[data-count]');
+    if (statEl) statEl.textContent = produtos.length;
+
+    refresh();
+}
+
+init();
