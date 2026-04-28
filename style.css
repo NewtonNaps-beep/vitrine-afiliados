@@ -130,12 +130,52 @@ h1 {
     box-shadow: 0 6px 12px rgba(0,0,0,0.4);
 }
 
+/* Estilo da Imagem e Efeito de Zoom */
+.product-image-container {
+    position: relative;
+    cursor: zoom-in;
+}
+
 .product-image {
     width: 80px;
     height: 80px;
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+/* Efeito de Lupa/Pop-up ao passar o mouse */
+.product-image-container:hover .product-image {
+    transform: scale(1.1);
+}
+
+.product-image-container::after {
+    content: "";
+    position: absolute;
+    top: -150px;
+    left: 100px;
+    width: 250px;
+    height: 250px;
+    background-image: inherit; /* Será definido via JS ou CSS variável */
+    background-size: cover;
+    background-position: center;
+    border-radius: 15px;
+    border: 3px solid var(--shopee-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+}
+
+/* No desktop, mostra o pop-up */
+@media (min-width: 800px) {
+    .product-image-container:hover::after {
+        opacity: 1;
+        visibility: visible;
+        background-image: var(--bg-image);
+    }
 }
 
 .product-info {

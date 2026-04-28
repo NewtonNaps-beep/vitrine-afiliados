@@ -16,7 +16,9 @@ function renderProducts(filteredProducts) {
         card.className = 'product-card';
         
         card.innerHTML = `
-            <img src="${product.imagem}" alt="${product.nome}" class="product-image">
+            <div class="product-image-container" style="--bg-image: url('${product.imagem}')">
+                <img src="${product.imagem}" alt="${product.nome}" class="product-image">
+            </div>
             <div class="product-info">
                 <p class="product-title"><span class="product-code">Cod ${product.codigo}</span> - ${product.nome}</p>
                 <div class="marketplace-buttons">
