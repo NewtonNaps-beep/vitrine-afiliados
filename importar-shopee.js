@@ -4,26 +4,36 @@ const path = require('path');
 
 // Caminhos
 const desktopPath = path.join(process.env.USERPROFILE, 'Desktop');
+const scratchPath = path.join(__dirname, '..', '..'); // Sobe de Vitrine-Afiliados/Meus Projetos/ para scratch/
 const outPath = path.join(__dirname, 'shopee.xlsx');
 
 function buscarArquivoMaisRecente() {
-    const arquivos = fs.readdirSync(desktopPath);
-    const arquivosShopee = arquivos
-        .filter(f => f.startsWith('BatchShopLinks') && f.endsWith('.csv'))
-        .map(f => ({
-            name: f,
-            time: fs.statSync(path.join(desktopPath, f)).mtime.getTime()
-        }))
-        .sort((a, b) => b.time - a.time);
+    const pastas = [desktopPath, scratchPath];
+    let arquivosEncontrados = [];
 
-    return arquivosShopee.length > 0 ? path.join(desktopPath, arquivosShopee[0].name) : null;
+    pastas.forEach(p => {
+        if (fs.existsSync(p)) {
+            const arquivos = fs.readdirSync(p);
+            const filtrados = arquivos
+                .filter(f => (f.startsWith('BatchShopLinks') || f.startsWith('BatchProductLinks')) && f.endsWith('.csv'))
+                .map(f => ({
+                    fullPath: path.join(p, f),
+                    name: f,
+                    time: fs.statSync(path.join(p, f)).mtime.getTime()
+                }));
+            arquivosEncontrados = [...arquivosEncontrados, ...filtrados];
+        }
+    });
+
+    arquivosEncontrados.sort((a, b) => b.time - a.time);
+    return arquivosEncontrados.length > 0 ? arquivosEncontrados[0].fullPath : null;
 }
 
 try {
     const csvPath = buscarArquivoMaisRecente();
 
     if (!csvPath) {
-        console.error('❌ Nenhum arquivo BatchShopLinks*.csv encontrado na Área de Trabalho.');
+        console.error('❌ Nenhum arquivo BatchShopLinks ou BatchProductLinks encontrado.');
         process.exit(1);
     }
 
@@ -36,9 +46,9 @@ try {
 
     // Transforma os dados para o formato da vitrine
     const novosProdutos = data.map(row => {
-        // Mapeamento de colunas da Shopee
-        const titulo = row['Offer Name'] || row['Item Name'] || 'Produto Shopee';
-        const link = row['Trackable Link_short'] || row['Offer Link'] || row['Item Link'];
+        // Mapeamento de colunas (Suporta ShopLinks e ProductLinks)
+        const titulo = row['Item Name'] || row['Offer Name'] || 'Produto Shopee';
+        const link = row['Offer Link'] || row['Trackable Link_short'] || row['Product Link'];
         const preco = row['Price'] || 'Ver Preço';
         const imagem = row['Image URL'] || row['Item Image'] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png';
         const comissao = row['Commission Rate'] ? `(Comissão: ${row['Commission Rate']})` : '';
