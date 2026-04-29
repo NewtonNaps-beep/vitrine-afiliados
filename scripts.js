@@ -27,8 +27,10 @@ async function carregarPlanilhas() {
             
             const linksComPlataforma = json.map(item => ({
                 ...item,
-                plataforma: planilha.nome
+                // Usa a plataforma definida no item (se houver), ou o nome padrão da planilha
+                plataforma: item.Badge || planilha.nome
             }));
+
             
             todosOsLinks = [...todosOsLinks, ...linksComPlataforma];
             
