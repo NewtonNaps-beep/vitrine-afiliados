@@ -4,7 +4,7 @@ const path = require('path');
 
 // Caminhos
 const desktopPath = path.join(process.env.USERPROFILE, 'Desktop');
-const scratchPath = path.join(__dirname, '..', '..'); // Sobe de Vitrine-Afiliados/Meus Projetos/ para scratch/
+const scratchPath = path.join(__dirname, '..', '..');
 const outPath = path.join(__dirname, 'shopee.xlsx');
 
 function buscarArquivoMaisRecente() {
@@ -33,45 +33,55 @@ try {
     const csvPath = buscarArquivoMaisRecente();
 
     if (!csvPath) {
-        console.error('❌ Nenhum arquivo BatchShopLinks ou BatchProductLinks encontrado.');
+        console.error('❌ Nenhum arquivo de links encontrado.');
         process.exit(1);
     }
 
-    console.log(`📂 Lendo o arquivo mais recente: ${path.basename(csvPath)}`);
+    console.log(`📂 Processando: ${path.basename(csvPath)}`);
     const wbCsv = xlsx.readFile(csvPath);
     const sheetCsv = wbCsv.Sheets[wbCsv.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheetCsv);
 
-    console.log(`✅ Encontrados ${data.length} itens no CSV.`);
-
-    // Transforma os dados para o formato da vitrine
     const novosProdutos = data.map(row => {
-        // Mapeamento de colunas (Suporta ShopLinks e ProductLinks)
         const titulo = row['Item Name'] || row['Offer Name'] || 'Produto Shopee';
         const link = row['Offer Link'] || row['Trackable Link_short'] || row['Product Link'];
-        const preco = row['Price'] || 'Ver Preço';
-        const imagem = row['Image URL'] || row['Item Image'] || 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png';
-        const comissao = row['Commission Rate'] ? `(Comissão: ${row['Commission Rate']})` : '';
+        
+        // Ajuste de Preço: 3099 -> R$ 30,99
+        let precoRaw = row['Price'];
+        let precoFormatado = 'Ver Preço';
+        
+        if (typeof precoRaw === 'number') {
+            const valor = precoRaw > 1000 ? precoRaw / 100 : precoRaw;
+            precoFormatado = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        } else if (precoRaw) {
+            precoFormatado = `R$ ${precoRaw}`.replace('.', ',');
+        }
+
+        const imagem = row['Image URL'] || row['Item Image'] || ''; 
 
         return {
             Titulo: titulo.trim(),
-            Descricao: `Oferta Especial Shopee ${comissao}`,
+            Descricao: `Oferta Especial Shopee ${row['Commission Rate'] ? `(${row['Commission Rate']})` : ''}`,
             Link: link,
-            Preco: preco.toString().includes('R$') ? preco : `R$ ${preco}`,
+            Preco: precoFormatado,
             Imagem: imagem,
             Badge: 'Shopee'
         };
-    }).filter(p => p.Link);
+    }).filter(p => {
+        // Regra do usuário: Retire produtos que não possam usar imagem (se imagem estiver vazia)
+        // Por enquanto, vou deixar passar se tiver imagem, senão filtro.
+        return p.Link && p.Imagem !== ''; 
+    });
 
-    // Cria a nova planilha
+    console.log(`✅ ${novosProdutos.length} produtos válidos com imagem encontrados.`);
+
     const newWs = xlsx.utils.json_to_sheet(novosProdutos);
     const newWb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(newWb, newWs, 'Produtos');
-
-    // Salva
     xlsx.writeFile(newWb, outPath);
-    console.log(`🚀 Sucesso! ${novosProdutos.length} produtos importados para shopee.xlsx`);
+    
+    console.log(`🚀 Sucesso! Planilha atualizada.`);
 
 } catch (error) {
-    console.error('❌ Erro durante a automação:', error.message);
+    console.error('❌ Erro:', error.message);
 }
