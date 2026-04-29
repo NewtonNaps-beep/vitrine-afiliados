@@ -24,11 +24,24 @@
             <p class="subtitle">As melhores ofertas da internet selecionadas para você.</p>
         </header>
 
+        <section class="controls">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="search-input" placeholder="O que você está procurando?">
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="Todos">Todos</button>
+                <button class="filter-btn" data-filter="Shopee">Shopee</button>
+                <button class="filter-btn" data-filter="Mercado Livre">Mercado Livre</button>
+                <button class="filter-btn" data-filter="Amazon">Amazon</button>
+            </div>
+        </section>
+
         <main class="links-list" id="links-container">
             <!-- Loading indicator -->
-            <div id="loading" style="text-align: center; width: 100%; padding: 20px;">
-                <i data-lucide="loader" style="animation: spin 2s linear infinite;"></i>
-                <p style="margin-top: 10px;">Carregando ofertas...</p>
+            <div id="loading" style="text-align: center; width: 100%; padding: 40px; grid-column: 1 / -1;">
+                <i data-lucide="loader" style="animation: spin 2s linear infinite; width: 32px; height: 32px;"></i>
+                <p style="margin-top: 15px; color: var(--text-muted);">Carregando as melhores ofertas...</p>
                 <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             </div>
         </main>

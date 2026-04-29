@@ -1,34 +1,30 @@
-// Configuração dos arquivos de planilhas
+// Configuração das plataformas
 const PLANILHAS = [
     { url: 'shopee.xlsx', nome: 'Shopee' },
     { url: 'mercadolivre.xlsx', nome: 'Mercado Livre' },
     { url: 'amazon.xlsx', nome: 'Amazon' }
 ];
 
+let todosOsLinks = [];
+let filtroAtual = 'Todos';
+let buscaAtual = '';
+
 async function carregarPlanilhas() {
     const container = document.getElementById('links-container');
-    let todosOsLinks = [];
-
+    
     for (const planilha of PLANILHAS) {
         try {
             const response = await fetch(planilha.url);
-            if (!response.ok) {
-                console.warn(`Planilha não encontrada ou erro ao carregar: ${planilha.url}`);
-                continue;
-            }
+            if (!response.ok) continue;
             
             const arrayBuffer = await response.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
             const workbook = XLSX.read(data, { type: 'array' });
             
-            // Assume que os dados estão na primeira aba
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Converte para JSON
             const json = XLSX.utils.sheet_to_json(worksheet);
             
-            // Adiciona a identificação da plataforma a cada link
             const linksComPlataforma = json.map(item => ({
                 ...item,
                 plataforma: planilha.nome
@@ -41,61 +37,88 @@ async function carregarPlanilhas() {
         }
     }
 
-    renderizarLinks(todosOsLinks, container);
+    renderizarLinks();
+    inicializarControles();
 }
 
-function renderizarLinks(links, container) {
-    container.innerHTML = ''; // Limpa o loading
+function renderizarLinks() {
+    const container = document.getElementById('links-container');
+    container.innerHTML = ''; 
 
-    if (links.length === 0) {
+    // Filtragem
+    const linksFiltrados = todosOsLinks.filter(link => {
+        const matchesFiltro = filtroAtual === 'Todos' || link.plataforma === filtroAtual;
+        const matchesBusca = (link.Titulo || '').toLowerCase().includes(buscaAtual.toLowerCase()) || 
+                             (link.Descricao || '').toLowerCase().includes(buscaAtual.toLowerCase());
+        return matchesFiltro && matchesBusca;
+    });
+
+    if (linksFiltrados.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px; opacity: 0.7;">
-                <p>Nenhuma oferta encontrada no momento.</p>
-                <p style="font-size: 0.8rem; margin-top: 10px;">Verifique se os arquivos .xlsx estão corretos.</p>
+            <div style="text-align: center; padding: 40px; grid-column: 1 / -1; opacity: 0.7;">
+                <i data-lucide="search-x" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                <p>Nenhum produto encontrado.</p>
             </div>
         `;
+        lucide.createIcons();
         return;
     }
 
-    links.forEach(link => {
-        // Valores default caso a planilha não tenha essas colunas
+    linksFiltrados.forEach((link, index) => {
         const titulo = link.Titulo || 'Produto sem título';
         const descricao = link.Descricao || '';
         const url = link.Link || '#';
-        const icone = link.Icone || 'shopping-bag';
-        const corIcone = link.CorIcone || '#ffffff';
-        const badge = link.Badge || '';
-        const imagem = link.Imagem || '';
         const preco = link.Preco || '';
+        const imagem = link.Imagem || 'https://via.placeholder.com/300?text=Sem+Imagem';
+        const plataforma = link.plataforma;
+        const badgeClass = `badge-${plataforma.toLowerCase().replace(' ', '')}`;
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.className = 'link-card';
+        const card = document.createElement('a');
+        card.href = url;
+        card.target = '_blank';
+        card.className = 'product-card';
+        card.style.animationDelay = `${index * 0.05}s`;
 
-        a.innerHTML = `
-            <div class="icon-box">
-                <i data-lucide="${icone}" style="color: ${corIcone};"></i>
-                ${(imagem || preco) ? `
-                <div class="hover-popup">
-                    ${imagem ? `<img src="${imagem}" alt="Produto" />` : ''}
-                    ${preco ? `<div class="popup-price">${preco}</div>` : ''}
+        card.innerHTML = `
+            <div class="product-image-container">
+                <span class="platform-badge ${badgeClass}">${plataforma}</span>
+                <img src="${imagem}" alt="${titulo}" class="product-img" loading="lazy">
+            </div>
+            <div class="product-details">
+                <h3 class="product-title">${titulo}</h3>
+                ${preco ? `<div class="product-price">${preco}</div>` : ''}
+                <p class="product-description">${descricao}</p>
+                <div class="buy-btn">
+                    Ver na ${plataforma}
+                    <i data-lucide="external-link"></i>
                 </div>
-                ` : ''}
             </div>
-            <div class="link-info">
-                <h3>${titulo}</h3>
-                ${descricao ? `<p>${descricao}</p>` : ''}
-            </div>
-            ${badge ? `<div class="badge">${badge}</div>` : ''}
         `;
 
-        container.appendChild(a);
+        container.appendChild(card);
     });
 
-    // Re-inicializa os ícones do Lucide para os elementos recém-criados
     lucide.createIcons();
 }
 
-// Inicia o carregamento assim que a página carregar
+function inicializarControles() {
+    const searchInput = document.getElementById('search-input');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    searchInput.addEventListener('input', (e) => {
+        buscaAtual = e.target.value;
+        renderizarLinks();
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filtroAtual = btn.dataset.filter;
+            renderizarLinks();
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', carregarPlanilhas);
+
