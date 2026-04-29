@@ -69,20 +69,27 @@ function renderizarLinks() {
         const descricao = link.Descricao || '';
         const url = link.Link || '#';
         const preco = link.Preco || '';
-        const imagem = link.Imagem || 'https://via.placeholder.com/300?text=Sem+Imagem';
+        const produto = link;
         const plataforma = link.plataforma;
         const badgeClass = `badge-${plataforma.toLowerCase().replace(' ', '')}`;
+
+        // Define a imagem principal ou um fallback elegante caso não exista imagem
+        const fallbackText = produto.Titulo ? produto.Titulo.substring(0, 2).toUpperCase() : 'SP';
+        const imgContent = produto.Imagem 
+            ? `<img src="${produto.Imagem}" alt="${titulo}" class="product-img" loading="lazy" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/256px-Shopee.svg.png'; this.classList.add('fallback-img');">`
+            : `<div class="img-fallback"><span><i data-lucide="shopping-bag"></i><br>Oferta<br>Shopee</span></div>`;
 
         const card = document.createElement('a');
         card.href = url;
         card.target = '_blank';
         card.className = 'product-card';
+        card.setAttribute('data-plataforma', plataforma);
         card.style.animationDelay = `${index * 0.05}s`;
 
         card.innerHTML = `
             <div class="product-image-container">
                 <span class="platform-badge ${badgeClass}">${plataforma}</span>
-                <img src="${imagem}" alt="${titulo}" class="product-img" loading="lazy">
+                ${imgContent}
             </div>
             <div class="product-details">
                 <h3 class="product-title">${titulo}</h3>
