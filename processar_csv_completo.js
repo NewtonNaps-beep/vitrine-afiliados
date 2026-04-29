@@ -16,20 +16,24 @@ try {
         const titulo = row['Item Name'] || row['Offer Name'] || 'Produto Shopee';
         const link = row['Offer Link'] || row['Product Link'] || '';
         
-        // Verifica se é um link de afiliado válido (s.shopee.com.br)
         if (!link.includes('s.shopee.com.br') && !link.includes('shope.ee')) {
-            return null; // Filtra links que não são de afiliado encurtados
+            return null; 
         }
 
-        // Formata o preço
         let precoRaw = row['Price'];
         let precoFinal = 'Ver Preço';
         
+        // CORREÇÃO: Todos os números vêm em centavos no CSV (ex: 859 = R$ 8,59)
         if (typeof precoRaw === 'number') {
-            const valor = precoRaw > 1000 ? precoRaw / 100 : precoRaw;
+            const valor = precoRaw / 100;
             precoFinal = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         } else if (precoRaw) {
-            precoFinal = `R$ ${precoRaw}`.replace('.', ',');
+            // Caso venha como string ex: "8,59"
+            if (precoRaw.toString().includes(',')) {
+                 precoFinal = `R$ ${precoRaw}`;
+            } else {
+                 precoFinal = `R$ ${precoRaw}`.replace('.', ',');
+            }
         }
 
         validos++;
@@ -39,7 +43,7 @@ try {
             Descricao: `Oferta Especial Shopee ${row['Commission Rate'] ? `(${row['Commission Rate']})` : ''}`,
             Link: link,
             Preco: precoFinal,
-            Imagem: '', // Vamos deixar vazio e o JS da página vai tratar
+            Imagem: '', // Mantemos vazio para usar o fallback
             Badge: 'Shopee'
         };
     }).filter(p => p !== null);
@@ -50,7 +54,7 @@ try {
     const newWb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(newWb, newWs, 'Produtos');
     xlsx.writeFile(newWb, outPath);
-    console.log(`🚀 Planilha shopee.xlsx gerada com todos os produtos do CSV.`);
+    console.log(`🚀 Planilha shopee.xlsx gerada com preços corrigidos.`);
 
 } catch (error) {
     console.error('❌ Erro:', error.message);
