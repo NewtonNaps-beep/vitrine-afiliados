@@ -70,7 +70,7 @@ function renderizarLinks() {
         const titulo = link.Titulo || 'Produto sem título';
         const descricao = link.Descricao || '';
         const url = link.Link || '#';
-        const preco = link.Preco || '';
+        const preco = 'Em oferta confira num Clique';
         const produto = link;
         const plataforma = link.plataforma;
         const badgeClass = `badge-${plataforma.toLowerCase().replace(' ', '')}`;
